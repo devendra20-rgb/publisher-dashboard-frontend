@@ -25,7 +25,7 @@ Open http://localhost:3000
 Set in `.env.local`:
 
 ```
-NEXT_PUBLIC_API_BASE=http://localhost:5000/api
+NEXT_PUBLIC_API_BASE=https://publisher-dashboard-backend.onrender.com/api
 NEXT_PUBLIC_USE_DUMMY=false
 ```
 
