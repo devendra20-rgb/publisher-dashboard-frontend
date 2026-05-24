@@ -1,83 +1,132 @@
 "use client";
+
 import { useEffect, useState } from "react";
-import { Card, CardContent } from "@/components/ui/card";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
-import { Switch } from "@/components/ui/switch";
-import { Skeleton } from "@/components/ui/skeleton";
-import { FileSpreadsheet } from "lucide-react";
 import { AddSheetDialog } from "@/components/sheets/add-sheet-dialog";
-import { fetchSheets, toggleSheet } from "@/lib/api";
+import { SheetTable } from "@/components/sheets/sheet-table";
+import { SheetModals } from "@/components/sheets/sheet-modals";
+import { fetchSheets, toggleSheet, deleteSheet } from "@/lib/api";
 import type { Sheet } from "@/types";
 
-function fmtDate(d: string) { try { return new Date(d).toLocaleDateString(); } catch { return d; } }
+import { Button } from "@/components/ui/button";
+import { RefreshCcw } from "lucide-react";
+import { toast } from "sonner";
 
 export default function SheetsPage() {
   const [sheets, setSheets] = useState<Sheet[]>([]);
   const [loading, setLoading] = useState(true);
+  const [syncing, setSyncing] = useState(false);
 
-  useEffect(() => { fetchSheets().then((s) => { setSheets(s); setLoading(false); }); }, []);
+  // Modal actions
+  const [toggleTarget, setToggleTarget] = useState<Sheet | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<Sheet | null>(null);
+  const [actionLoading, setActionLoading] = useState(false);
 
-  async function onToggle(id: string) {
-    const updated = await toggleSheet(id);
-    if (updated) setSheets((prev) => prev.map((s) => (s._id === id ? updated : s)));
+  // Fetch Sheets
+  useEffect(() => {
+    fetchSheets().then((s) => {
+      setSheets(s || []);
+      setLoading(false);
+    });
+  }, []);
+
+  // Manual Sync Function
+  const handleManualSync = async () => {
+    try {
+      setSyncing(true);
+      // Call your sync API endpoint
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE}/sync`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+      });
+
+      if (!response.ok) throw new Error("Sync failed");
+
+      const freshSheets = await fetchSheets();
+      setSheets(freshSheets || []);
+
+      toast.success("Sheets synced successfully");
+    } catch (error) {
+      toast.error("Failed to sync sheets");
+    } finally {
+      setSyncing(false);
+    }
+  };
+
+  async function handleToggleConfirm() {
+    if (!toggleTarget) return;
+    setActionLoading(true);
+    const updated = await toggleSheet(toggleTarget._id);
+    if (updated) {
+      setSheets((prev) =>
+        prev.map((s) => (s._id === toggleTarget._id ? updated : s))
+      );
+    }
+    setActionLoading(false);
+    setToggleTarget(null);
+  }
+
+  async function handleDeleteConfirm() {
+    if (!deleteTarget) return;
+    setActionLoading(true);
+    const success = await deleteSheet(deleteTarget._id);
+    if (success) {
+      setSheets((prev) => prev.filter((s) => s._id !== deleteTarget._id));
+    }
+    setActionLoading(false);
+    setDeleteTarget(null);
   }
 
   return (
-    <div className="space-y-4">
-      <div className="flex flex-wrap items-center justify-between gap-3">
+    <div className="min-h-screen bg-slate-50/50 p-4 md:p-8 space-y-8">
+      {/* Header Section - Same as Publishers */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200 pb-6">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight">Sheet Management</h1>
-          <p className="text-sm text-muted-foreground">Manage Google Sheets connected to the dashboard</p>
+          <h1 className="text-3xl font-bold tracking-tight text-slate-900 md:text-4xl">
+            Sheet Management
+          </h1>
+          <p className="text-sm md:text-base text-slate-500 mt-1">
+            Configure automated sheet pipelines for tracker updates
+          </p>
         </div>
-        <AddSheetDialog onCreated={(s) => setSheets((p) => [s, ...p])} />
+
+        <div className="flex items-center gap-3">
+          <Button
+            onClick={handleManualSync}
+            disabled={syncing}
+            variant="outline"
+            className="inline-flex items-center gap-2 px-5 h-11 rounded-xl"
+          >
+            <RefreshCcw className={`h-4 w-4 ${syncing ? "animate-spin" : ""}`} />
+            {syncing ? "Syncing..." : "Manual Sync"}
+          </Button>
+
+          <AddSheetDialog onCreated={(s) => setSheets((p) => [s, ...p])} />
+        </div>
       </div>
 
-      <Card>
-        <CardContent className="p-0">
-          {loading ? (
-            <div className="p-6 space-y-3">{Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-12" />)}</div>
-          ) : sheets.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-20 text-muted-foreground">
-              <FileSpreadsheet className="h-10 w-10 mb-3" />
-              <p className="font-medium">No sheets yet</p>
-              <p className="text-sm">Add your first Google Sheet to get started.</p>
-            </div>
-          ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Sheet Name</TableHead>
-                  <TableHead>Used By</TableHead>
-                  <TableHead>Range</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Added</TableHead>
-                  <TableHead className="text-right">Active</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {sheets.map((s) => (
-                  <TableRow key={s._id}>
-                    <TableCell>
-                      <div className="font-medium">{s.sheetName}</div>
-                      <div className="text-xs text-muted-foreground truncate max-w-[260px]">{s.sheetId}</div>
-                    </TableCell>
-                    <TableCell>{s.usedBy}</TableCell>
-                    <TableCell><code className="text-xs">{s.range}</code></TableCell>
-                    <TableCell>
-                      {s.active ? <Badge variant="success">Active</Badge> : <Badge variant="secondary">Inactive</Badge>}
-                    </TableCell>
-                    <TableCell className="text-muted-foreground">{fmtDate(s.createdAt)}</TableCell>
-                    <TableCell className="text-right">
-                      <Switch checked={s.active} onCheckedChange={() => onToggle(s._id)} />
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          )}
-        </CardContent>
-      </Card>
+      {/* Table Container - Matching Publishers Design */}
+      <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden p-2 md:p-4">
+        <div className="overflow-x-auto rounded-xl">
+          <SheetTable
+            rows={sheets}
+            loading={loading}
+            actionLoading={actionLoading}
+            onToggleTarget={setToggleTarget}
+            onDeleteTarget={setDeleteTarget}
+          />
+        </div>
+      </div>
+
+      {/* Modals */}
+      <SheetModals
+        toggleTarget={toggleTarget}
+        deleteTarget={deleteTarget}
+        actionLoading={actionLoading}
+        onCloseToggle={() => setToggleTarget(null)}
+        onCloseDelete={() => setDeleteTarget(null)}
+        onConfirmToggle={handleToggleConfirm}
+        onConfirmDelete={handleDeleteConfirm}
+      />
     </div>
   );
 }

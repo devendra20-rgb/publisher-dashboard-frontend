@@ -102,9 +102,16 @@ export default function PublishersPage() {
   // Fetch sheets → usedBy dropdown
   // ─────────────────────────────────────────────
   useEffect(() => {
-    fetchSheets().then((sheets) => {
+    fetchPublishers({
+      page: 1,
+      limit: 1000,
+    }).then((res) => {
       const uniquePeople = [
-        ...new Set<string>(sheets.map((s) => s.usedBy).filter(Boolean)),
+        ...new Set<string>(
+          (res.publishers || [])
+            .map((p) => p.agencyPOC)
+            .filter(Boolean)
+        ),
       ];
 
       setPeople(uniquePeople);
@@ -181,39 +188,49 @@ export default function PublishersPage() {
   );
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex flex-wrap items-center justify-between gap-3">
+    <div className="min-h-screen bg-slate-50/50 p-4 md:p-8 space-y-8">
+      {/* Header Container */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200 pb-6">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Publishers</h1>
-
-          <p className="text-sm text-muted-foreground">
+          <h1 className="text-3xl font-bold tracking-tight text-slate-900 md:text-4xl">
+            Publishers
+          </h1>
+          <p className="text-sm md:text-base text-slate-500 mt-1">
             All onboarding records from connected sheets
           </p>
         </div>
 
         {/* Manual Sync Button */}
-        <Button onClick={handleManualSync} disabled={syncing} className="gap-2">
-          <RefreshCcw className={`h-4 w-4 ${syncing ? "animate-spin" : ""}`} />
-
-          {syncing ? "Syncing..." : "Manual Sync"}
+        <Button 
+          onClick={handleManualSync} 
+          disabled={syncing} 
+          className="sm:w-auto w-full inline-flex items-center justify-center gap-2 px-5 h-11 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-medium shadow-sm transition-all active:scale-[0.98]"
+        >
+          <RefreshCcw className={`h-4 w-4 transition-transform ${syncing ? "animate-spin" : ""}`} />
+          {syncing ? "Syncing Database..." : "Manual Sync"}
         </Button>
       </div>
 
-      {/* Filters */}
-      <PublisherFilters
-        value={filters}
-        onChange={setFilters}
-        people={people}
-        markets={markets}
-        statuses={statuses}
-      />
+      {/* Filters Wrapper */}
+      <div className="w-full">
+        <PublisherFilters
+          value={filters}
+          onChange={setFilters}
+          people={people}
+          markets={markets}
+          statuses={statuses}
+        />
+      </div>
 
-      {/* Table */}
-      <div className="space-y-4">
-        <PublisherTable rows={data?.publishers ?? []} loading={loading} />
+      {/* Table & Pagination Area */}
+      <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden p-2 md:p-4 space-y-6">
+        <div className="overflow-x-auto rounded-xl">
+          <PublisherTable rows={data?.publishers ?? []} loading={loading} />
+        </div>
 
-        <PaginationBar pagination={pagination} onPage={setPage} />
+        <div className="border-t border-slate-100 pt-4 px-2">
+          <PaginationBar pagination={pagination} onPage={setPage} />
+        </div>
       </div>
     </div>
   );

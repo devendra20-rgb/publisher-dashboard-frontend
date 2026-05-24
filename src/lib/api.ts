@@ -92,6 +92,22 @@ export async function toggleSheet(
 }
 
 // ─────────────────────────────────────────────
+// Delete Sheet
+// ─────────────────────────────────────────────
+export async function deleteSheet(
+  id: string
+): Promise<boolean> {
+  const res = await safeFetch(
+    `${API_BASE}/sheets/${id}`,
+    {
+      method: "DELETE",
+    }
+  );
+
+  return !!res;
+}
+
+// ─────────────────────────────────────────────
 // Publisher Query
 // ─────────────────────────────────────────────
 export interface PublisherQuery {
