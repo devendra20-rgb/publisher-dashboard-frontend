@@ -39,6 +39,7 @@ export function SheetTable({
     <div className="w-full relative">
       <div className="max-h-[600px] overflow-auto relative">
         <Table className="w-full border-collapse">
+          {/* Sticky Header - Same as PublisherDetailsTable */}
           <TableHeader className="bg-slate-50/70 backdrop-blur-md sticky top-0 z-20 border-b border-slate-200 shadow-[0_1px_0_0_rgba(226,232,240,1)]">
             <TableRow className="hover:bg-transparent">
               <TableHead className="font-semibold text-slate-700 h-12 px-6 text-sm">Sheet Name</TableHead>
@@ -51,25 +52,25 @@ export function SheetTable({
           </TableHeader>
 
           <TableBody>
-            {/* Loading Skeletons */}
+            {/* Loading Skeletons - Matching PublisherDetailsTable */}
             {loading &&
-              Array.from({ length: 5 }).map((_, i) => (
+              Array.from({ length: 6 }).map((_, i) => (
                 <TableRow key={i} className="border-b border-slate-100">
                   {Array.from({ length: 6 }).map((__, j) => (
                     <TableCell key={j} className="p-6">
-                      <Skeleton 
+                      <Skeleton
                         className={`h-4 rounded-md bg-slate-100 ${
                           j === 0 ? "w-64" : 
                           j === 2 ? "w-32" : 
                           j === 5 ? "w-24 ml-auto" : "w-28"
-                        }`} 
+                        }`}
                       />
                     </TableCell>
                   ))}
                 </TableRow>
               ))}
 
-            {/* Empty State */}
+            {/* Empty State - Same as PublisherDetailsTable */}
             {!loading && rows.length === 0 && (
               <TableRow>
                 <TableCell colSpan={6} className="p-0">
@@ -89,8 +90,8 @@ export function SheetTable({
             {/* Data Rows */}
             {!loading &&
               rows.map((s) => (
-                <TableRow 
-                  key={s._id} 
+                <TableRow
+                  key={s._id}
                   className="border-b border-slate-100 hover:bg-slate-50/70 transition-colors group"
                 >
                   {/* Sheet Name + ID */}
@@ -141,11 +142,11 @@ export function SheetTable({
                     {s.createdAt ? new Date(s.createdAt).toLocaleDateString("en-GB") : "—"}
                   </TableCell>
 
-                  {/* Actions - Matching Screenshot Style */}
+                  {/* Actions */}
                   <TableCell className="p-6 text-right">
                     <div className="flex items-center justify-end gap-4">
                       <div className="flex items-center gap-2">
-                        <span className="text-sm text-slate-600 font-medium">
+                        <span className="text-sm text-slate-600 font-medium hidden sm:inline">
                           {s.active ? "Active" : "Inactive"}
                         </span>
                         <Switch 

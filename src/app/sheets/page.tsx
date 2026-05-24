@@ -33,7 +33,6 @@ export default function SheetsPage() {
   const handleManualSync = async () => {
     try {
       setSyncing(true);
-      // Call your sync API endpoint
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE}/sync`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -78,7 +77,7 @@ export default function SheetsPage() {
 
   return (
     <div className="min-h-screen bg-slate-50/50 p-4 md:p-8 space-y-8">
-      {/* Header Section - Same as Publishers */}
+      {/* Header - Exact same style as Publishers Page */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200 pb-6">
         <div>
           <h1 className="text-3xl font-bold tracking-tight text-slate-900 md:text-4xl">
@@ -89,14 +88,14 @@ export default function SheetsPage() {
           </p>
         </div>
 
+        {/* Buttons - Consistent with Publishers */}
         <div className="flex items-center gap-3">
           <Button
             onClick={handleManualSync}
             disabled={syncing}
-            variant="outline"
-            className="inline-flex items-center gap-2 px-5 h-11 rounded-xl"
+            className="sm:w-auto w-full inline-flex items-center justify-center gap-2 px-5 h-11 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-medium shadow-sm transition-all active:scale-[0.98]"
           >
-            <RefreshCcw className={`h-4 w-4 ${syncing ? "animate-spin" : ""}`} />
+            <RefreshCcw className={`h-4 w-4 transition-transform ${syncing ? "animate-spin" : ""}`} />
             {syncing ? "Syncing..." : "Manual Sync"}
           </Button>
 
@@ -104,7 +103,7 @@ export default function SheetsPage() {
         </div>
       </div>
 
-      {/* Table Container - Matching Publishers Design */}
+      {/* Table Container - Same as Publishers & Publisher Details */}
       <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden p-2 md:p-4">
         <div className="overflow-x-auto rounded-xl">
           <SheetTable

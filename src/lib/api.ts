@@ -7,6 +7,7 @@ import type {
   Sheet,
   PublisherResponse,
   ApiResponse,
+   PublisherDetail,
 } from "@/types";
 
 // ─────────────────────────────────────────────
@@ -123,6 +124,43 @@ export interface PublisherQuery {
   range?: string;
 }
 
+// export interface PublisherDetailsQuery {
+//   pubId?: string;
+
+//   publisherName?: string;
+
+//   market?: string;
+
+//   campaignWishlist?: string;
+
+//   campaignType?: string;
+
+//   mmpTrackingTool?: string;
+
+//   page?: number;
+
+//   limit?: number;
+// }
+
+export interface PublisherDetailsResponse {
+  publisherDetails: PublisherDetail[];
+
+  pagination: {
+    total: number;
+
+    page: number;
+
+    limit: number;
+
+    totalPages: number;
+
+    hasNextPage: boolean;
+
+    hasPrevPage: boolean;
+  };
+}
+
+
 // ─────────────────────────────────────────────
 // Fetch Publishers
 // ─────────────────────────────────────────────
@@ -169,4 +207,76 @@ export async function fetchPublishers(
       hasPrevPage: false,
     },
   };
+}
+
+// ─────────────────────────────────────────────
+// Fetch Publisher Details
+// ─────────────────────────────────────────────
+export interface PublisherDetailsQuery {
+  pubId?: string;
+  publisherName?: string;
+  market?: string;
+  campaignWishlist?: string;
+  campaignType?: string;
+  mmpTrackingTool?: string;
+  page?: number;
+  limit?: number;
+}
+
+export async function fetchPublisherDetails(
+  q: PublisherDetailsQuery = {}
+): Promise<any> {
+
+  const params =
+    new URLSearchParams();
+
+  Object.entries(q).forEach(
+    ([k, v]) => {
+
+      if (
+        v !== undefined &&
+        v !== ""
+      ) {
+        params.set(
+          k,
+          String(v)
+        );
+      }
+
+    }
+  );
+
+  const res =
+    await safeFetch<any>(
+      `${API_BASE}/publisher-details?${params.toString()}`
+    );
+
+  return (
+    res?.data || {
+      publisherDetails: [],
+      pagination: {
+        total: 0,
+        page: 1,
+        limit: 10,
+        totalPages: 1,
+        hasNextPage: false,
+        hasPrevPage: false,
+      },
+    }
+  );
+}
+
+// ─────────────────────────────────────────────
+// Manual Sync Publisher Details
+// ─────────────────────────────────────────────
+export async function manualSyncPublisherDetails() {
+
+  const res = await safeFetch(
+    `${API_BASE}/publisher-details/sync`,
+    {
+      method: "POST",
+    }
+  );
+
+  return res;
 }

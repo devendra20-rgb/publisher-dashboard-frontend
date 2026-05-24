@@ -5,7 +5,14 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 import type { Pagination } from "@/types";
 
 export function PaginationBar({ pagination, onPage }: { pagination: Pagination; onPage: (p: number) => void }) {
-  const { page, totalPages, total, limit, hasNextPage, hasPrevPage } = pagination;
+  const {
+  page = 1,
+  totalPages = 1,
+  total = 0,
+  limit = 10,
+  hasNextPage = false,
+  hasPrevPage = false,
+} = pagination || {};
   const start = total === 0 ? 0 : (page - 1) * limit + 1;
   const end = Math.min(total, page * limit);
   

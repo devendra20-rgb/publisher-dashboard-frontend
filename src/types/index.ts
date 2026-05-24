@@ -24,6 +24,16 @@ export interface Publisher {
   updatedAt?: string;
 }
 
+export interface PublisherDetail {
+  _id: string;
+  pubId: string;
+  publisherName: string;
+  market: string;
+  campaignWishlist: string;
+  campaignType: string;
+  mmpTrackingTool: string;
+}
+
 export interface Pagination {
   total: number; page: number; limit: number; totalPages: number;
   hasNextPage: boolean; hasPrevPage: boolean;
